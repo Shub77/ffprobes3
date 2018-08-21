@@ -18,8 +18,9 @@ Usage::
 
 (The MIT License)
 
-Copyright © 2013 Simon Hargreaves <simon@simon-hargreaves.com>
 Copyright © 2018 Matteo Tenca <matteo.tenca at gmail.com>
+
+Copyright © 2013 Simon Hargreaves <simon@simon-hargreaves.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
