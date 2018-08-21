@@ -1,8 +1,3 @@
-.. ffprobes3 documentation master file, created by
-   sphinx-quickstart on Tue Aug 21 05:04:02 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 ffprobes3 Python module
 =========================
 
@@ -44,16 +39,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-.. toctree::
-   :maxdepth: 1
-
-   ffprobes3
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

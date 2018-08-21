@@ -1,6 +1,3 @@
-"""
-Python3 wrapper for ffprobe command line tool. ffprobe must exist in the path.
-"""
 import os
 import pathlib
 # import pipes
@@ -13,23 +10,16 @@ import subprocess
 from ffprobes3.exceptions import FFProbeError
 
 
-class FFProbe:
+class FFProbes3:
     """
-    FFProbe wraps the ffprobe command and pulls the data into an object form::
-        metadata=FFProbe('multimedia-file.mov')
-    """
+    FFProbes3 wraps the ffprobe command and pulls the data into an object.
+    For example:
+    metadata = FFProbes3("this_is_a_multimedia_file.mp4')
+   """
 
     def __init__(self, video_file):
 
         self.video_file = pathlib.Path(video_file)
-
-        try:
-
-            with open(os.devnull, 'w') as tempf:
-                subprocess.check_call(["ffprobe", "-h"], stdout=tempf, stderr=tempf)
-
-        except IOError as e:
-            raise IOError('ffprobe not found.')
 
         if video_file.is_file():
 
@@ -37,7 +27,14 @@ class FFProbe:
             #     cmd = ["ffprobe", "-show_streams", self.video_file]
             # else:
             #     cmd = ["ffprobe -show_streams " + pipes.quote(self.video_file)]
+            try:
+                with open(os.devnull, 'w') as tempf:
+                    subprocess.check_call(["ffprobe", "-h"], stdout=tempf, stderr=tempf)
+            except IOError as e:
+                raise IOError('ffprobe not found.')
+
             cmd = ["ffprobe -show_streams " + shlex.quote(str(self.video_file))]
+
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             self.format = None
             self.created = None
@@ -79,7 +76,30 @@ class FFProbe:
 
 class FFStream:
     """
-    An object representation of an individual stream in a multimedia file.
+An object representation of an individual stream in a multimedia file.
+
+
+:class:`FFStream` objects are created from :class:`FFProbes3` as it reads the file.
+The constructor creates a dynamic list of attributes, based on the "xx = yy" format of
+ffprobe's text output.
+
+
+For example, two lines of ffprobe's output like these::
+
+    avg_frame_rate=0/0
+    time_base=1/48000
+
+will generate these :class:`FFStream`'s attributes::
+
+    avg_frame_rate
+    time_base
+
+with these values::
+
+    0/0
+    1/48000
+
+:param list data_lines: list of lines from the output obtained from ffprobe
     """
 
     def __init__(self, data_lines):
@@ -258,8 +278,7 @@ class FFStream:
 
     def get_r_frame_rate(self):
         """
-        Returns r_frame_rateas a str or float
-        :return: float
+        Returns the fps value for the stream
         """
 
         b = float(0)
@@ -291,8 +310,7 @@ class FFStream:
 
     def get_avg_frame_rate(self):
         """
-        Returns avg_frame_rate
-        :return: float
+        Returns the average fps value for the stream
         """
         try:
             if self.__dict__['avg_frame_rate']:

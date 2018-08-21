@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import os
-from ffprobes3 import FFProbe
+from ffprobes3 import FFProbes3
 from ffprobes3.exceptions import FFProbeError
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +14,7 @@ test_videos = [
 ]
 
 for test_video in test_videos:
-    media = FFProbe(test_video)
+    media = FFProbes3(test_video)
     print('File:', test_video)
     print('\tStreams:', len(media.streams))
     for index, stream in enumerate(media.streams, 1):

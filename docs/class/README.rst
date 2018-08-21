@@ -7,9 +7,9 @@ Usage::
 
     #!/usr/bin/env python
 
-    from ffprobe3 import FFProbe
+    from ffprobe3 import FFProbes3
 
-    metadata = FFProbe("test-media-file.mov")
+    metadata = FFProbes3("test-media-file.mov")
 
     for stream in metadata.streams:
         if stream.is_video():
