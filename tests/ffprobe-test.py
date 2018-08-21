@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 import os
-from ffprobe3 import FFProbe
-from ffprobe3.exceptions import FFProbeError
+from ffprobes3 import FFProbe
+from ffprobes3.exceptions import FFProbeError
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
 

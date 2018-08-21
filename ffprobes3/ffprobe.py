@@ -1,14 +1,16 @@
 """
-Python wrapper for ffprobe command line tool. ffprobe must exist in the path.
+Python3 wrapper for ffprobe command line tool. ffprobe must exist in the path.
 """
 import os
-import pipes
-import platform
+import pathlib
+# import pipes
+# import platform
 import re
+import shlex
 import subprocess
-import math
+# import math
 
-from ffprobe3.exceptions import FFProbeError
+from ffprobes3.exceptions import FFProbeError
 
 
 class FFProbe:
@@ -18,18 +20,24 @@ class FFProbe:
     """
 
     def __init__(self, video_file):
-        self.video_file = video_file
+
+        self.video_file = pathlib.Path(video_file)
+
         try:
+
             with open(os.devnull, 'w') as tempf:
                 subprocess.check_call(["ffprobe", "-h"], stdout=tempf, stderr=tempf)
-        except:
-            raise IOError('ffprobe not found.')
-        if os.path.isfile(video_file):
-            if str(platform.system()) == 'Windows':
-                cmd = ["ffprobe", "-show_streams", self.video_file]
-            else:
-                cmd = ["ffprobe -show_streams " + pipes.quote(self.video_file)]
 
+        except IOError as e:
+            raise IOError('ffprobe not found.')
+
+        if video_file.is_file():
+
+            # if str(platform.system()) == 'Windows':
+            #     cmd = ["ffprobe", "-show_streams", self.video_file]
+            # else:
+            #     cmd = ["ffprobe -show_streams " + pipes.quote(self.video_file)]
+            cmd = ["ffprobe -show_streams " + shlex.quote(str(self.video_file))]
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             self.format = None
             self.created = None
@@ -66,7 +74,7 @@ class FFProbe:
                 if a.is_video():
                     self.video.append(a)
         else:
-            raise IOError('No such media file ' + video_file)
+            raise IOError('No such media file ' + str(self.video_file))
 
 
 class FFStream:
@@ -144,13 +152,14 @@ class FFStream:
         frame_count = 0
         if self.is_video() or self.is_audio():
             try:
+                # Easiest way: ffprobe reported it directly
                 if self.__dict__['nb_frames'] != "N/A":
                     frame_count = int(self.__dict__['nb_frames'])
+                # Hard way: no ffprobe info, maybe some into metadata, let's check it out
                 elif self.__dict__['TAG:DURATION']:
-                    # print(self.__dict__['TAG:DURATION'])
                     match = re.search("^(?:00|(\d\d)):?(?:00|(\d\d)):?(?:00|(\d\d))\.(\d+)", self.__dict__['TAG:DURATION'])
                     if match:
-                        # 00:03:50.070000000
+                        # This is an example of the TAG:DURATION field value: 00:03:50.070000000
                         if match.group(1):
                             hours = match.group(1)
                             frame_count += int(hours) * 60 * 60
@@ -161,14 +170,21 @@ class FFStream:
                             seconds = match.group(3)
                             frame_count += int(seconds)
 
+                        # we know how many seconds the media lasts, let's try to find the fps and
+                        # calculate the number of frames
+                        # TODO: I can use the get_avg_frame_rate method too... I should detect if the fps are
+                        # fixed or average someway.
+
                         fps = self.get_r_frame_rate()
                         frame_count = frame_count * fps
 
+                        # TODO: This are the remaining frames, es. 070000000 in  00:03:50.070000000
+                        # I don't know how to treat them: 070000000 = 7 frames?
                         # if match.group(4):
                         #     frame_count += int(match.group(4))
-
                 else:
                     raise ValueError
+
             except ValueError:
                 raise FFProbeError('None integer frame count')
         return frame_count
@@ -184,10 +200,10 @@ class FFStream:
                 if self.__dict__['duration'] != "N/A":
                     duration = float(self.__dict__['duration'])
                 else:
+                    # TODO: Hard way, may not work everytime
                     fps = self.get_avg_frame_rate()
                     framenumbers = self.frames()
                     duration = float(framenumbers / fps)
-
             except ValueError:
                 raise FFProbeError('None numeric duration')
         return duration
@@ -243,23 +259,29 @@ class FFStream:
     def get_r_frame_rate(self):
         """
         Returns r_frame_rateas a str or float
-
-        :param integer: bool
         :return: float
         """
-        # return self.__dict__['r_frame_rate']
+
+        b = float(0)
+
         try:
             if self.__dict__['r_frame_rate']:
+                # Check for a "/" sign in the string
                 match = re.search("(\d+)(?:/(\d+))?", self.__dict__['r_frame_rate'])
                 if match:
                     if match.group(1):
+                        # This is the numerator. es 30000
                         b = float(match.group(1))
                         if match.group(2):
+                            # If present, we divide the above for this one (es. 1001)
+                            # result: 29.96 or kinda.
                             b = b / float(match.group(2))
-                            # b = round(b, 4)
+                            # just 2 decimal digits
+                            b = round(b, 2)
                     else:
                         raise ValueError
                 else:
+                    # no "/" simbol, it should be the fps
                     b = float(self.__dict__['r_frame_rate'])
 
         except ValueError:
@@ -280,7 +302,7 @@ class FFStream:
                         b = float(match.group(1))
                         if match.group(2):
                             b = b / float(match.group(2))
-                            # b = round(b, 4)
+                            b = round(b, 2)
                     else:
                         raise ValueError
                 else:
